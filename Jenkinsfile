@@ -15,7 +15,8 @@ pipeline {
 
     stage('Build & Test') {
       steps {
-        bat 'mvn -B clean test'
+        // clean + run tests + build the JAR
+        bat 'mvn -B clean test package'
       }
     }
 
@@ -24,6 +25,13 @@ pipeline {
         withSonarQubeEnv('SonarQubeLocal') {
           bat 'mvn -B sonar:sonar -Dsonar.projectKey=math-utils-java-junit-jenkins -Dsonar.projectName=math-utils-java-junit-jenkins'
         }
+      }
+    }
+
+    stage('Archive Artifact') {
+      steps {
+        // store the built JAR in Jenkins as a downloadable artifact
+        archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
       }
     }
   }
