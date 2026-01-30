@@ -20,9 +20,16 @@ pipeline {
     }
   }
 
-  post {
-    always {
-      junit 'target/surefire-reports/*.xml'
-    }
+post {
+  always {
+    junit 'target/surefire-reports/*.xml'
+
+    jacoco(
+      execPattern: '**/target/jacoco.exec',
+      classPattern: '**/target/classes',
+      sourcePattern: '**/src/main/java',
+      exclusionPattern: '**/target/**'
+    )
   }
+}
 }
