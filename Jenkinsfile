@@ -18,18 +18,26 @@ pipeline {
         bat 'mvn -B clean test'
       }
     }
+
+    stage('SonarQube Analysis') {
+      steps {
+        withSonarQubeEnv('SonarQubeLocal') {
+          bat 'mvn -B sonar:sonar -Dsonar.projectKey=math-utils-java-junit-jenkins -Dsonar.projectName=math-utils-java-junit-jenkins'
+        }
+      }
+    }
   }
 
-post {
-  always {
-    junit 'target/surefire-reports/*.xml'
+  post {
+    always {
+      junit 'target/surefire-reports/*.xml'
 
-    jacoco(
-      execPattern: '**/target/jacoco.exec',
-      classPattern: '**/target/classes',
-      sourcePattern: '**/src/main/java',
-      exclusionPattern: '**/target/**'
-    )
+      jacoco(
+        execPattern: '**/target/jacoco.exec',
+        classPattern: '**/target/classes',
+        sourcePattern: '**/src/main/java',
+        exclusionPattern: '**/target/**'
+      )
+    }
   }
-}
 }
