@@ -39,34 +39,35 @@ pipeline {
     }
   }
 
-  post {
-    success {
-      bat """
-        curl -s -X POST ^
-          -H "Content-type: application/json" ^
-          --data "{\\"text\\":\\"✅ SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)\\"}" ^
-          "%SLACK_WEBHOOK_URL%"
-      """
-    }
-
-    failure {
-      bat """
-        curl -s -X POST ^
-          -H "Content-type: application/json" ^
-          --data "{\\"text\\":\\"❌ FAILURE: ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)\\"}" ^
-          "%SLACK_WEBHOOK_URL%"
-      """
-    }
-
-    always {
-      junit 'target/surefire-reports/*.xml'
-
-      jacoco(
-        execPattern: '**/target/jacoco.exec',
-        classPattern: '**/target/classes',
-        sourcePattern: '**/src/main/java',
-        exclusionPattern: '**/target/**'
-      )
-    }
+post {
+  success {
+    bat """
+      curl -s -X POST ^
+        -H "Content-type: application/json" ^
+        --data "{\\"text\\":\\"SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER} - ${env.BUILD_URL}\\"}" ^
+        "%SLACK_WEBHOOK_URL%"
+    """
   }
+
+  failure {
+    bat """
+      curl -s -X POST ^
+        -H "Content-type: application/json" ^
+        --data "{\\"text\\":\\"FAILURE: ${env.JOB_NAME} #${env.BUILD_NUMBER} - ${env.BUILD_URL}\\"}" ^
+        "%SLACK_WEBHOOK_URL%"
+    """
+  }
+
+  always {
+    junit 'target/surefire-reports/*.xml'
+
+    jacoco(
+      execPattern: '**/target/jacoco.exec',
+      classPattern: '**/target/classes',
+      sourcePattern: '**/src/main/java',
+      exclusionPattern: '**/target/**'
+    )
+  }
+}
+
 }
