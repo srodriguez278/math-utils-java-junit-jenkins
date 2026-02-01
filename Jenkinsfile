@@ -6,6 +6,11 @@ pipeline {
     maven 'Maven3'
   }
 
+  environment {
+    // Uses Jenkins credential ID shown in your screenshot: slack-webhook
+    SLACK_WEBHOOK_URL = credentials('slack-webhook')
+  }
+
   stages {
     stage('Checkout') {
       steps {
@@ -15,7 +20,6 @@ pipeline {
 
     stage('Build & Test') {
       steps {
-        // clean + run tests + build the JAR
         bat 'mvn -B clean test package'
       }
     }
@@ -30,13 +34,30 @@ pipeline {
 
     stage('Archive Artifact') {
       steps {
-        // store the built JAR in Jenkins as a downloadable artifact
         archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
       }
     }
   }
 
   post {
+    success {
+      bat """
+        curl -s -X POST ^
+          -H "Content-type: application/json" ^
+          --data "{\\"text\\":\\"✅ SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)\\"}" ^
+          "%SLACK_WEBHOOK_URL%"
+      """
+    }
+
+    failure {
+      bat """
+        curl -s -X POST ^
+          -H "Content-type: application/json" ^
+          --data "{\\"text\\":\\"❌ FAILURE: ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)\\"}" ^
+          "%SLACK_WEBHOOK_URL%"
+      """
+    }
+
     always {
       junit 'target/surefire-reports/*.xml'
 
